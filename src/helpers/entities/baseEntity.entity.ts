@@ -13,19 +13,19 @@ export abstract class BaseEntity {
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
-    nullable: false,
+    nullable: true,
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     type: 'timestamp with time zone',
-    nullable: false,
+    nullable: true,
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     type: 'timestamp with time zone',
-    nullable: false,
+    nullable: true,
   })
   deletedAt!: Date;
 }

@@ -22,10 +22,10 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Arwana server')
-    .setDescription('Arwana server api documentation')
+    .setTitle('Real estate server')
+    .setDescription('Real estate server api documentation')
     .setVersion('1.0')
-    .addTag('arwana')
+    .addTag('Real estate')
     .addServer('/api')
     .addBearerAuth()
     .build();
@@ -39,7 +39,7 @@ async function bootstrap() {
   app.use(helmet());
   app.enableCors({
     credentials: true,
-    origin: 'http://182.237.3.11',
+    origin: '*',
   });
   app.use(cookieParser(`${process.env.COOKIE_SECRET}`));
   app.use(compression());
@@ -57,11 +57,6 @@ async function bootstrap() {
   });
 
   app.useLogger(app.get(CustomLogger, { strict: false }));
-
-  if (module.hot) {
-    module.hot.accept();
-    module.hot.dispose(() => app.close());
-  }
 }
 
 bootstrap();

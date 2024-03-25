@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MediaService } from './media.service';
-import { MediaController } from './media.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MinioModule } from 'src/minio/minio.module';
+import { MediaEntity } from './entities/mediaEntity';
 
 @Module({
-  controllers: [MediaController],
+  imports: [TypeOrmModule.forFeature([MediaEntity]), MinioModule],
   providers: [MediaService],
+  exports: [MediaService],
 })
 export class MediaModule {}

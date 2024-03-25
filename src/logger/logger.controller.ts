@@ -8,7 +8,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { LogsEntity } from './entity/log.entity';
-import { AuthGuard } from 'src/admin/guards/auth.guard';
+import { AuthGuard } from 'src/helpers/guards/auth.guard';
 
 @ApiTags('logs')
 @Controller('/root/logs')

@@ -12,14 +12,12 @@ import { TerminusModule } from '@nestjs/terminus';
 import { AuthModule } from './admin/auth/auth.module';
 import { TokenModule } from './admin/token/token.module';
 import { UserModule } from './admin/user/user.module';
-import { MailsModule } from './mailer/mails.module';
-import { CategoryModule } from './category/category.module';
-import { BrandsModule } from './brands/brands.module';
-import { ProductsModule } from './products/products.module';
-import { BrandCategoryModule } from './brand-category/brand-category.module';
+import { MailsModule } from './mails/mails.module';
 import { SharedModule } from './shared/shared.module';
 import { MediaModule } from './media/media.module';
-import { ProductOptionsModule } from './product-options/product-options.module';
+import { RedisModule } from './redis/redis.module';
+import { PropertyModule } from './property/property.module';
+import { AreasModule } from './areas/areas.module';
 
 @Module({
   imports: [
@@ -40,18 +38,16 @@ import { ProductOptionsModule } from './product-options/product-options.module';
     }),
     TerminusModule.forRoot(),
     LoggerModule,
-    CategoryModule,
-    BrandsModule,
     HealthModule,
     AuthModule,
     TokenModule,
     UserModule,
     MailsModule,
-    ProductsModule,
-    BrandCategoryModule,
     SharedModule,
     MediaModule,
-    ProductOptionsModule,
+    RedisModule,
+    PropertyModule,
+    AreasModule,
   ],
   providers: [
     {

@@ -14,7 +14,7 @@ export class TokenService {
 
   generateTokens(payload: TokenDto) {
     const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: '1d',
+      expiresIn: '10m',
     });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
       expiresIn: '30d',
@@ -75,11 +75,10 @@ export class TokenService {
       const token = await this.tokenRepository.findOne({
         where: { refreshToken: refreshToken },
       });
-        
+
       return token;
     } catch (err) {
       throw new UnauthorizedException('Token not found! Please register first');
     }
-  
   }
 }

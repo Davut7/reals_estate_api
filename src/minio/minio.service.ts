@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import * as Minio from 'minio';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as Minio from 'minio';
+import { Readable } from 'typeorm/platform/PlatformTools';
 
 @Injectable()
-export class MinioService {
+export class MinioService implements OnModuleInit {
   private minioClient: Minio.Client;
   private bucketName: string;
-  constructor(private readonly configService: ConfigService) {
+
+  constructor(private configService: ConfigService) {
     this.minioClient = new Minio.Client({
       endPoint: process.env.MINIO_ENDPOINT,
       port: Number(process.env.MINIO_PORT),
@@ -18,10 +20,14 @@ export class MinioService {
     this.bucketName = process.env.MINIO_BUCKET_NAME;
   }
 
+  async onModuleInit() {
+    await this.createBucketIfNotExists();
+  }
+
   async createBucketIfNotExists() {
     const bucketExists = await this.minioClient.bucketExists(this.bucketName);
     if (!bucketExists) {
-      await this.minioClient.makeBucket(this.bucketName, 'arwana');
+      await this.minioClient.makeBucket(this.bucketName, this.bucketName);
       const publicPolicy = {
         Version: '2012-10-17',
         Statement: [
@@ -33,6 +39,7 @@ export class MinioService {
           },
         ],
       };
+
       await this.minioClient.setBucketPolicy(
         this.bucketName,
         JSON.stringify(publicPolicy),
@@ -40,26 +47,35 @@ export class MinioService {
     }
   }
 
-  async uploadObject(fileName: string, buffer: Buffer, size: number) {
-    const file = await this.minioClient.putObject(
-      this.bucketName,
-      fileName,
-      buffer,
-      size,
-    );
-    return file;
-  }
-
   async uploadFile(fileName: string, filePath: string, mimeType: string) {
-    const file = await this.minioClient.fPutObject(
+    const metaData = {
+      'Content-Type': mimeType,
+    };
+
+    const uploadedFile = await this.minioClient.fPutObject(
       this.bucketName,
       fileName,
       filePath,
-      {
-        'Content-Type': mimeType,
-      },
+      metaData,
     );
-    return file;
+    return uploadedFile;
+  }
+
+  async uploadFileStream(
+    fileName: string,
+    fileStream: Readable,
+    mimeType: string,
+  ) {
+    const metaData = {
+      'Content-Type': mimeType,
+    };
+    const uploadedFile = await this.minioClient.putObject(
+      this.bucketName,
+      fileName,
+      fileStream,
+      metaData,
+    );
+    return uploadedFile;
   }
 
   async getFileUrl(fileName: string) {
@@ -68,20 +84,26 @@ export class MinioService {
       this.bucketName,
       fileName,
     );
+    if (process.env.NODE_ENV === 'development') {
+      return url;
+    }
     return url.replace(
-      'http://localhost:9000/' + this.bucketName + '/',
+      this.configService.get('MINIO_ENDPOINT'),
       process.env.MINIO_HOST,
     );
   }
 
   async deleteFile(fileName: string) {
+    console.log(fileName);
     await this.minioClient.removeObject(this.bucketName, fileName);
   }
 
-  async deleteFiles(fileName: string[]) {
-    this.minioClient.removeObjects(this.bucketName, fileName, (err) => {
+  async deleteFiles(fileNames: string[]) {
+    this.minioClient.removeObjects(this.bucketName, fileNames, (err) => {
       if (err) {
         console.error('Error deleting objects:', err);
+      } else {
+        console.log('Objects deleted successfully');
       }
     });
   }

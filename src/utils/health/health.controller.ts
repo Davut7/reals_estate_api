@@ -8,7 +8,7 @@ import {
   DiskHealthIndicator,
   MemoryHealthIndicator,
 } from '@nestjs/terminus';
-import { AuthGuard } from 'src/admin/guards/auth.guard';
+import { AuthGuard } from 'src/helpers/guards/auth.guard';
 
 @ApiTags('server-health')
 @Controller('health')

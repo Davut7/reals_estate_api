@@ -6,26 +6,42 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserUpdateDto } from './dto/updateUser.dto';
-import { CurrentUser } from '../decorators/currentUser.decorator';
+import { CurrentUser } from '../../helpers/common/decorators/currentUser.decorator';
 import { TokenDto } from '../token/dto/token.dto';
-import { AuthGuard } from '../guards/auth.guard';
+import { AuthGuard } from '../../helpers/guards/auth.guard';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { CreateUserDto } from './dto/createUser.dto';
+import { SuccessResponseMessage } from 'src/helpers/common/interfaces/successResponse.interface';
+import { RootGuard } from 'src/helpers/guards/rootGuard.guard';
 
 @ApiTags('users')
-@Controller('/admin/users')
+@Controller('/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @ApiBody({ type: CreateUserDto, description: 'Data to create user' })
+  @ApiCreatedResponse({
+    type: SuccessResponseMessage,
+    description: 'User created',
+  })
+  @UseGuards(RootGuard)
+  @Post('/create-user')
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUser(createUserDto);
+  }
 
   @ApiOkResponse({
     type: [UserEntity],
@@ -34,7 +50,7 @@ export class UserController {
   @ApiBearerAuth()
   @Get()
   @UseGuards(AuthGuard)
-  findUsers() {
+  async findUsers() {
     return this.userService.getAllUsers();
   }
 
@@ -45,8 +61,8 @@ export class UserController {
   @ApiBearerAuth()
   @Get('/get-me')
   @UseGuards(AuthGuard)
-  getMe(@CurrentUser() currentUser: TokenDto) {
-    return this.userService.getUserByToken(currentUser);
+  async getMe(@CurrentUser() currentUser: TokenDto) {
+    return this.userService.getMe(currentUser);
   }
 
   @ApiOkResponse({
@@ -57,7 +73,7 @@ export class UserController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @Get(':id')
   @UseGuards(AuthGuard)
-  findOneUser(@Param('id', ParseUUIDPipe) userId: string) {
+  async findOneUser(@Param('id', ParseUUIDPipe) userId: string) {
     return this.userService.findUserById(userId);
   }
 
@@ -70,7 +86,7 @@ export class UserController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @Patch(':id')
   @UseGuards(AuthGuard)
-  updateUser(
+  async updateUser(
     @Param('id', ParseUUIDPipe) userId: string,
     @Body() userUpdateDto: UserUpdateDto,
   ) {
@@ -84,7 +100,7 @@ export class UserController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  deleteUser(@Param('id', ParseUUIDPipe) userId: string) {
+  async deleteUser(@Param('id', ParseUUIDPipe) userId: string) {
     return this.userService.deleteUserById(userId);
   }
 }

@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { TerminusLogger } from './terminus.logger';
 import { TokenModule } from 'src/admin/token/token.module';
 import { UserModule } from 'src/admin/user/user.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserModule } from 'src/admin/user/user.module';
     HttpModule,
     UserModule,
     TokenModule,
+    RedisModule,
   ],
   controllers: [HealthController],
 })
