@@ -44,7 +44,7 @@ export class UserService {
     return {
       message: 'User returned successfully',
       users: users,
-      userCount: count,
+      usersCount: count,
     };
   }
 
@@ -54,12 +54,7 @@ export class UserService {
       select: ['id', 'name', 'createdAt', 'updatedAt', 'role'],
     });
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
-    return {
-      id: user.id,
-      name: user.name,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return user;
   }
 
   async updateUserById(userId: string, userUpdateDto: UserUpdateDto) {

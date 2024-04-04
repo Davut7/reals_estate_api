@@ -12,6 +12,7 @@ import { GetAreasQuery } from './dto/getAreas.query';
 import { UpdateAreaDto } from './dto/updateArea.dto';
 import { ITransformedFile } from 'src/helpers/common/interfaces/fileTransform.interface';
 import { MediaService } from 'src/media/media.service';
+import { unlink } from 'fs/promises';
 
 @Injectable()
 export class AreasService {
@@ -64,13 +65,12 @@ export class AreasService {
       .where('areas.id = :areaId', { areaId })
       .getOne();
 
-    if (!area) throw new NotFoundException(`Area ${areaId} not found`);
     return area;
   }
 
   async updateArea(areaId: string, dto: UpdateAreaDto) {
     const area = await this.getOneArea(areaId);
-
+    if (!area) throw new NotFoundException('Area not found');
     Object.assign(area, dto);
 
     await this.areaRepository.save(area);
@@ -87,6 +87,7 @@ export class AreasService {
     await queryRunner.connect();
     let mediaIds = [];
     const area = await this.getOneArea(areaId);
+    if (!area) throw new NotFoundException(`Area ${areaId} not found`);
     try {
       await queryRunner.manager.delete(AreaEntity, area.id);
       for (const media of area.medias) {
@@ -109,7 +110,12 @@ export class AreasService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     await queryRunner.connect();
-    await this.getOneArea(areaId);
+    const area = await this.getOneArea(areaId);
+    if (!area) {
+      for (const file of files) {
+        await unlink(file.filePath);
+      }
+    }
     let uploadedFileIds: string[];
     try {
       const medias = await this.mediaService.createFilesMedia(
@@ -141,6 +147,9 @@ export class AreasService {
     try {
       await this.mediaService.deleteOneMedia(mediaId, queryRunner);
       await queryRunner.commitTransaction();
+      return {
+        message: 'Area image deleted successfully',
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(error);

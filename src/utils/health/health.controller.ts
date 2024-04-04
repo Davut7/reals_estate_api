@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, OnModuleInit } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   HealthCheckService,
@@ -8,55 +8,80 @@ import {
   DiskHealthIndicator,
   MemoryHealthIndicator,
 } from '@nestjs/terminus';
-import { AuthGuard } from 'src/helpers/guards/auth.guard';
 
 @ApiTags('server-health')
 @Controller('health')
-export class HealthController {
+export class HealthController implements OnModuleInit {
   constructor(
     private health: HealthCheckService,
     private http: HttpHealthIndicator,
     private db: TypeOrmHealthIndicator,
-    private readonly disk: DiskHealthIndicator,
+    private disk: DiskHealthIndicator,
     private memory: MemoryHealthIndicator,
   ) {}
 
-  @ApiResponse({ description: 'Check is server ok' })
+  onModuleInit() {
+    this.runHealthChecks();
+  }
+
+  private async runHealthChecks() {
+    try {
+      await this.checkHTTP();
+      await this.checkTypeOrm();
+      await this.checkDisk();
+      await this.checkMemory();
+    } catch (error) {
+      console.error('Health check failed:', error);
+    }
+  }
+
+  @ApiResponse({ description: 'Check if server is okay' })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
   @Get('/http')
   @HealthCheck()
-  checkHTTP() {
+  async checkHTTP() {
     return this.health.check([
       () => this.http.pingCheck('google', 'https://google.com'),
     ]);
   }
 
-  @ApiResponse({ description: 'Check is database ok' })
+  @ApiResponse({ description: 'Check if database is okay' })
   @ApiBearerAuth()
   @Get('/database')
   @HealthCheck()
-  checkTypeOrm() {
+  async checkTypeOrm() {
     return this.health.check([() => this.db.pingCheck('database')]);
   }
 
-  // @Get('/disk')
-  // @HealthCheck()
-  // checkDisk() {
-  //   return this.health.check([
-  //     () =>
-  //       this.disk.checkStorage('storage', {
-  //         path: 'C:\\',
-  //         thresholdPercent: 250 * 1024 * 1024 * 1024,
-  //       }),
-  //   ]);
-  // }
+  @Get('/disk')
+  @HealthCheck()
+  async checkDisk() {
+    let path: string;
+    // Determine the correct path based on the operating system
+    if (process.platform === 'darwin') {
+      // macOS
+      path = '/';
+    } else if (process.platform === 'linux') {
+      // Ubuntu or other Linux distributions
+      path = '/';
+    } else {
+      throw new Error('Unsupported operating system');
+    }
 
-  @ApiResponse({ description: 'Check is memory ok' })
+    return this.health.check([
+      () =>
+        this.disk.checkStorage('storage', {
+          path,
+          thresholdPercent: 90,
+        }),
+    ]);
+  }
+
+  @ApiResponse({ description: 'Check if memory is okay' })
   @ApiBearerAuth()
   @Get('/memory')
   @HealthCheck()
-  checkMemory() {
+  async checkMemory() {
     return this.health.check([
       () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
     ]);

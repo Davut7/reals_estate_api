@@ -38,7 +38,7 @@ import { AreasModule } from './areas/areas.module';
     }),
     TerminusModule.forRoot(),
     LoggerModule,
-    HealthModule,
+    // HealthModule,
     AuthModule,
     TokenModule,
     UserModule,

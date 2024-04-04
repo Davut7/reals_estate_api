@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -14,12 +16,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { AuthGuard } from 'src/helpers/guards/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -32,6 +36,7 @@ import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/createProperty.dto';
 import { GetPropertiesQuery } from './dto/getPropertiesQuery.query';
 import { UpdatePropertyDto } from './dto/updateProperty.dto';
+import { PropertyEntity } from './entities/property.entity';
 
 @ApiTags('property')
 @ApiBearerAuth()
@@ -41,10 +46,21 @@ export class PropertyController {
 
   @ApiCreatedResponse({
     description: 'Property created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Property created successfully' },
+        property: { $ref: getSchemaPath(PropertyEntity) },
+      },
+    },
   })
-  @ApiBearerAuth()
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    description: 'Area not found',
+  })
+  @ApiParam({ type: 'string', name: 'areaId', description: 'Area id' })
   @UseGuards(AuthGuard)
-  @Post()
+  @Post(':areaId')
   async createProperty(
     @Body() dto: CreatePropertyDto,
     @Param('areaId', ParseUUIDPipe) areaId: string,
@@ -54,8 +70,14 @@ export class PropertyController {
 
   @ApiOkResponse({
     description: 'List of properties',
+    schema: {
+      type: 'object',
+      properties: {
+        properties: { items: { $ref: getSchemaPath(PropertyEntity) } },
+        propertiesCount: { type: 'number' },
+      },
+    },
   })
-  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get()
   async getProperties(@Query() query?: GetPropertiesQuery) {
@@ -64,9 +86,9 @@ export class PropertyController {
 
   @ApiOkResponse({
     description: 'Single property retrieved successfully',
+    type: PropertyEntity,
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Property id' })
   @UseGuards(AuthGuard)
   @Get('/:id')
@@ -76,9 +98,15 @@ export class PropertyController {
 
   @ApiOkResponse({
     description: 'Property updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Property updated successfully' },
+        property: { $ref: getSchemaPath(PropertyEntity) },
+      },
+    },
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Property id' })
   @UseGuards(AuthGuard)
   @Patch('/:id')
@@ -91,9 +119,14 @@ export class PropertyController {
 
   @ApiOkResponse({
     description: 'Property deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Property deleted successfully' },
+      },
+    },
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Property id' })
   @UseGuards(AuthGuard)
   @Delete('/:id')
@@ -106,7 +139,7 @@ export class PropertyController {
   @ApiInternalServerErrorResponse({
     description: 'Error while uploading Property image',
   })
-  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard)
   @Post('/images/:id')
   @UseInterceptors(
@@ -130,10 +163,19 @@ export class PropertyController {
     return this.propertyService.uploadImages(files, areaId);
   }
 
-  @ApiOkResponse({ description: 'Area image uploaded successfully' })
+  @ApiOkResponse({
+    description: 'Area image uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Property image deleted successfully' },
+      },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiInternalServerErrorResponse({
     description: 'Error while uploading area image',
+    type: InternalServerErrorException,
   })
   @UseGuards(AuthGuard)
   @Delete('/:propertyId/image/:imageId')

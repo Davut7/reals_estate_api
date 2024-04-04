@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -15,12 +16,14 @@ import {
 import {
   ApiBearerAuth,
   ApiConflictResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { AreasService } from './areas.service';
 import { CreateAreaDto } from './dto/createArea.dto';
@@ -33,6 +36,7 @@ import { randomUUID } from 'crypto';
 import { imageFilter } from 'src/helpers/filters/imageFilter';
 import { ImagesTransformer } from 'src/helpers/pipes/imagesTransform.pipe';
 import { ITransformedFile } from 'src/helpers/common/interfaces/fileTransform.interface';
+import { AreaEntity } from './entities/area.entity';
 
 @ApiTags('areas')
 @ApiBearerAuth()
@@ -42,9 +46,15 @@ export class AreasController {
 
   @ApiCreatedResponse({
     description: 'Area created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Area created successfully' },
+        area: { $ref: getSchemaPath(AreaEntity) },
+      },
+    },
   })
   @ApiConflictResponse({ description: 'Area already exists' })
-  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post()
   async createArea(@Body() dto: CreateAreaDto) {
@@ -53,8 +63,14 @@ export class AreasController {
 
   @ApiOkResponse({
     description: 'List of areas',
+    schema: {
+      type: 'object',
+      properties: {
+        areas: { items: { $ref: getSchemaPath(AreaEntity) } },
+        areasCount: { type: 'number' },
+      },
+    },
   })
-  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get()
   async getAreas(@Query() query?: GetAreasQuery) {
@@ -63,9 +79,9 @@ export class AreasController {
 
   @ApiOkResponse({
     description: 'Single area retrieved successfully',
+    type: AreaEntity,
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Area id' })
   @UseGuards(AuthGuard)
   @Get('/:id')
@@ -75,9 +91,15 @@ export class AreasController {
 
   @ApiOkResponse({
     description: 'Area updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Area updated successfully' },
+        area: { $ref: getSchemaPath(AreaEntity) },
+      },
+    },
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Area id' })
   @UseGuards(AuthGuard)
   @Patch('/:id')
@@ -87,9 +109,14 @@ export class AreasController {
 
   @ApiOkResponse({
     description: 'Area deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Area deleted successfully' },
+      },
+    },
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Area id' })
   @UseGuards(AuthGuard)
   @Delete('/:id')
@@ -97,12 +124,23 @@ export class AreasController {
     return this.areasService.deleteArea(areaId);
   }
 
-  @ApiOkResponse({ description: 'Area image uploaded successfully' })
+  @ApiOkResponse({
+    description: 'Area image uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Area image uploaded successfully',
+        },
+      },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiInternalServerErrorResponse({
     description: 'Error while uploading area image',
   })
-  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard)
   @Post('/images/:id')
   @UseInterceptors(
@@ -126,10 +164,22 @@ export class AreasController {
     return this.areasService.uploadImages(files, areaId);
   }
 
-  @ApiOkResponse({ description: 'Area image uploaded successfully' })
+  @ApiOkResponse({
+    description: 'Area image uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Area image deleted successfully',
+        },
+      },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiInternalServerErrorResponse({
     description: 'Error while uploading area image',
+    type: InternalServerErrorException,
   })
   @UseGuards(AuthGuard)
   @Delete('/:areaId/image/:imageId')

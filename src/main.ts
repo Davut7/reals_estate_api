@@ -10,7 +10,6 @@ import { SentryFilter } from './helpers/filters/sentry.filter';
 import CustomLogger from './logger/helpers/customLogger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-declare const module: any;
 
 async function bootstrap() {
   const port = process.env.PORT;

@@ -1,24 +1,30 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  NotFoundException,
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/userLogin.dto';
 import {
-  ApiBody,
+  ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { RedisService } from 'src/redis/redis.service';
 import { AuthGuard } from 'src/helpers/guards/auth.guard';
-import { SuccessResponseMessage } from 'src/helpers/common/interfaces/successResponse.interface';
-import { AuthResponse } from 'src/helpers/common/interfaces/userAuthResponse.interface';
+import { UserEntity } from '../user/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('/auth')
@@ -28,8 +34,26 @@ export class AuthController {
     private redisService: RedisService,
   ) {}
 
-  @ApiBody({ type: LoginDto, description: 'Data to login' })
-  @ApiCreatedResponse({ type: AuthResponse, description: 'User logged in' })
+  @ApiCreatedResponse({
+    description: 'User logged in',
+    schema: {
+      type: 'object',
+      properties: {
+        user: { $ref: getSchemaPath(UserEntity) },
+        message: { type: 'string', example: 'System user login successfully!' },
+        accessToken: { type: 'string' },
+        refreshToken: { type: 'string' },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    type: BadRequestException,
+    description: 'User password incorrect!',
+  })
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    description: 'User with not found!',
+  })
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res) {
     const user = await this.authService.loginUser(loginDto);
@@ -45,7 +69,25 @@ export class AuthController {
     });
   }
 
-  @ApiOkResponse({ type: AuthResponse, description: 'User tokens refreshed' })
+  @ApiCreatedResponse({
+    description: 'User tokens refreshed in',
+    schema: {
+      type: 'object',
+      properties: {
+        user: { $ref: getSchemaPath(UserEntity) },
+        message: {
+          type: 'string',
+          example: 'System user tokens refreshed successfully!',
+        },
+        accessToken: { type: 'string' },
+        refreshToken: { type: 'string' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    description: 'User unauthorized',
+  })
   @Get('refresh')
   async refresh(@Req() req, @Res() res) {
     const refreshToken = req.cookies['refreshToken'];
@@ -64,8 +106,18 @@ export class AuthController {
 
   @ApiOkResponse({
     description: 'User logged out',
-    type: SuccessResponseMessage,
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Log out successfully' },
+      },
+    },
   })
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    description: 'User unauthorized',
+  })
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() req, @Res() res) {

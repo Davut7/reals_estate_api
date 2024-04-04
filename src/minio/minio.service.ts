@@ -26,6 +26,7 @@ export class MinioService implements OnModuleInit {
 
   async createBucketIfNotExists() {
     const bucketExists = await this.minioClient.bucketExists(this.bucketName);
+
     if (!bucketExists) {
       await this.minioClient.makeBucket(this.bucketName, this.bucketName);
       const publicPolicy = {

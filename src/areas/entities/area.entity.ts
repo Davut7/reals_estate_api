@@ -24,9 +24,11 @@ export class AreaEntity extends BaseEntity {
   @Column({ nullable: false })
   description: string;
 
+  @ApiProperty({ type: () => [PropertyEntity] })
   @OneToMany(() => PropertyEntity, (properties) => properties.area)
   properties: PropertyEntity[];
 
+  @ApiProperty({ type: () => [MediaEntity] })
   @OneToMany(() => MediaEntity, (media) => media.area)
   medias: MediaEntity[];
 }

@@ -98,14 +98,17 @@ export class PropertyEntity extends BaseEntity {
   @Column({ nullable: false })
   baths: string;
 
+  @ApiProperty({ type: 'string', description: 'Area id' })
   @Column({ type: 'uuid', nullable: false })
   areaId: string;
 
+  @ApiProperty({ type: () => AreaEntity })
   @ManyToOne(() => AreaEntity, (area) => area.properties, {
     onDelete: 'CASCADE',
   })
   area: AreaEntity;
 
+  @ApiProperty({ type: () => [MediaEntity] })
   @OneToMany(() => MediaEntity, (media) => media.property)
   medias: MediaEntity[];
 }

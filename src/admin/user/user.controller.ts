@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -16,38 +17,56 @@ import { TokenDto } from '../token/dto/token.dto';
 import { AuthGuard } from '../../helpers/guards/auth.guard';
 import {
   ApiBearerAuth,
-  ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiParam,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/createUser.dto';
-import { SuccessResponseMessage } from 'src/helpers/common/interfaces/successResponse.interface';
 import { RootGuard } from 'src/helpers/guards/rootGuard.guard';
 
 @ApiTags('users')
+@ApiBearerAuth()
 @Controller('/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiBody({ type: CreateUserDto, description: 'Data to create user' })
   @ApiCreatedResponse({
-    type: SuccessResponseMessage,
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'User created successful!' },
+      },
+    },
     description: 'User created',
   })
-  @UseGuards(RootGuard)
+  @ApiConflictResponse({
+    type: ConflictException,
+    description: 'User with name  already exists!',
+  })
+  // @UseGuards(RootGuard)
   @Post('/create-user')
   async createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
 
   @ApiOkResponse({
-    type: [UserEntity],
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'User returned successfully',
+        },
+        users: { items: { $ref: getSchemaPath(UserEntity) } },
+        usersCount: { type: 'number' },
+      },
+    },
     description: 'Users returned successfully!',
   })
-  @ApiBearerAuth()
   @Get()
   @UseGuards(AuthGuard)
   async findUsers() {
@@ -58,7 +77,6 @@ export class UserController {
     type: UserEntity,
     description: 'Current user returned successfully!',
   })
-  @ApiBearerAuth()
   @Get('/get-me')
   @UseGuards(AuthGuard)
   async getMe(@CurrentUser() currentUser: TokenDto) {
@@ -69,7 +87,6 @@ export class UserController {
     type: UserEntity,
     description: 'User by id found',
   })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'User ID' })
   @Get(':id')
   @UseGuards(AuthGuard)
@@ -81,8 +98,6 @@ export class UserController {
     type: UserEntity,
     description: 'User by id found',
   })
-  @ApiBearerAuth()
-  @ApiBody({ type: UserUpdateDto, description: 'Data to update user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @Patch(':id')
   @UseGuards(AuthGuard)
@@ -95,8 +110,13 @@ export class UserController {
 
   @ApiOkResponse({
     description: 'User by id deleted',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'User deleted successfully!' },
+      },
+    },
   })
-  @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'User ID' })
   @Delete(':id')
   @UseGuards(AuthGuard)

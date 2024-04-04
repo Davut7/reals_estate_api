@@ -53,6 +53,7 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'enum', enum: RoleEnum })
   role: RoleEnum;
 
+  @ApiProperty({ type: () => TokenEntity })
   @OneToOne(() => TokenEntity, (token) => token.user)
   @JoinColumn()
   token: TokenEntity;

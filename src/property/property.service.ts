@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePropertyDto } from './dto/createProperty.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PropertyEntity } from './entities/property.entity';
@@ -8,6 +12,7 @@ import { UpdatePropertyDto } from './dto/updateProperty.dto';
 import { GetPropertiesQuery } from './dto/getPropertiesQuery.query';
 import { ITransformedFile } from 'src/helpers/common/interfaces/fileTransform.interface';
 import { MediaService } from 'src/media/media.service';
+import { unlink } from 'fs/promises';
 
 @Injectable()
 export class PropertyService {
@@ -20,8 +25,8 @@ export class PropertyService {
   ) {}
 
   async createProperty(areaId: string, dto: CreatePropertyDto) {
-    await this.areaService.getOneArea(areaId);
-
+    const area = await this.areaService.getOneArea(areaId);
+    if (!area) throw new NotFoundException('Area not found');
     const property = this.propertyRepository.create(dto);
 
     await this.propertyRepository.save(property);
@@ -100,7 +105,7 @@ export class PropertyService {
 
   async updateProperty(propertyId: string, dto: UpdatePropertyDto) {
     const property = await this.getOneProperty(propertyId);
-
+    if (!property) throw new NotFoundException('Property not found');
     Object.assign(property, dto);
 
     await this.propertyRepository.save(property);
@@ -113,7 +118,7 @@ export class PropertyService {
 
   async deleteProperty(propertyId: string) {
     const property = await this.getOneProperty(propertyId);
-
+    if (!property) throw new NotFoundException('Property not found');
     await this.propertyRepository.delete(property.id);
 
     return {
@@ -121,18 +126,23 @@ export class PropertyService {
     };
   }
 
-  async uploadImages(files: ITransformedFile[], areaId: string) {
+  async uploadImages(files: ITransformedFile[], propertyId: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     await queryRunner.connect();
-    await this.getOneProperty(areaId);
+    const property = await this.getOneProperty(propertyId);
+    if (!property) {
+      for (const file of files) {
+        await unlink(file.filePath);
+      }
+    }
     let uploadedFileIds: string[];
     try {
       const medias = await this.mediaService.createFilesMedia(
         files,
-        areaId,
+        propertyId,
         queryRunner,
-        'areaId',
+        'propertyId',
       );
       uploadedFileIds = medias.fileIds;
       await queryRunner.commitTransaction();
@@ -157,6 +167,9 @@ export class PropertyService {
     try {
       await this.mediaService.deleteOneMedia(mediaId, queryRunner);
       await queryRunner.commitTransaction();
+      return {
+        message: 'Image deleted successfully',
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(error);
