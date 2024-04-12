@@ -78,7 +78,6 @@ export class PropertyController {
       },
     },
   })
-  @UseGuards(AuthGuard)
   @Get()
   async getProperties(@Query() query?: GetPropertiesQuery) {
     return this.propertyService.getProperties(query);
@@ -90,7 +89,6 @@ export class PropertyController {
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
   @ApiParam({ name: 'id', description: 'Property id' })
-  @UseGuards(AuthGuard)
   @Get('/:id')
   async getOneProperty(@Param('id') propertyId: string) {
     return this.propertyService.getOneProperty(propertyId);

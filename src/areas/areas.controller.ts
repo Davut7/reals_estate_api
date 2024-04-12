@@ -71,7 +71,6 @@ export class AreasController {
       },
     },
   })
-  @UseGuards(AuthGuard)
   @Get()
   async getAreas(@Query() query?: GetAreasQuery) {
     return this.areasService.getAreas(query);
@@ -83,7 +82,6 @@ export class AreasController {
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiParam({ name: 'id', description: 'Area id' })
-  @UseGuards(AuthGuard)
   @Get('/:id')
   async getOneArea(@Param('id') areaId: string) {
     return this.areasService.getOneArea(areaId);
