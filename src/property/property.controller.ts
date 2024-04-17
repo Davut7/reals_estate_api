@@ -181,6 +181,6 @@ export class PropertyController {
     @Param('propertyId', ParseUUIDPipe) propertyId: string,
     @Param('imageId', ParseUUIDPipe) imageId: string,
   ) {
-    return this.propertyService.deleteImage(imageId, propertyId);
+    return this.propertyService.deleteImage(propertyId, imageId);
   }
 }

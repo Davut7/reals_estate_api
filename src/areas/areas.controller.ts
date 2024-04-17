@@ -185,6 +185,6 @@ export class AreasController {
     @Param('areaId', ParseUUIDPipe) areaId: string,
     @Param('imageId', ParseUUIDPipe) imageId: string,
   ) {
-    return this.areasService.deleteImage(imageId, areaId);
+    return this.areasService.deleteImage(areaId, imageId);
   }
 }

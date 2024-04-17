@@ -27,7 +27,7 @@ export class PropertyService {
   async createProperty(areaId: string, dto: CreatePropertyDto) {
     const area = await this.areaService.getOneArea(areaId);
     if (!area) throw new NotFoundException('Area not found');
-    const property = this.propertyRepository.create(dto);
+    const property = this.propertyRepository.create({...dto, areaId:areaId});
 
     await this.propertyRepository.save(property);
 
@@ -158,8 +158,8 @@ export class PropertyService {
     }
   }
 
-  async deleteImage(areaId: string, mediaId: string) {
-    await this.getOneProperty(areaId);
+  async deleteImage(propertyId: string, mediaId: string) {
+    await this.getOneProperty(propertyId);
     await this.mediaService.getOneMedia(mediaId);
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
