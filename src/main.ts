@@ -1,15 +1,14 @@
-import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'reflect-metadata';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import * as compression from 'compression';
 import * as Sentry from '@sentry/node';
 import { SentryFilter } from './helpers/filters/sentry.filter';
 import CustomLogger from './logger/helpers/customLogger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
 
 async function bootstrap() {
   const port = process.env.PORT;
@@ -48,7 +47,7 @@ async function bootstrap() {
   });
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryFilter(httpAdapter));
-
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.setGlobalPrefix('api');
 
   await app.listen(port, () => {

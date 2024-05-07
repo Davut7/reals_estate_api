@@ -9,21 +9,22 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RoleEnum } from 'src/helpers/constants';
+import { Expose } from 'class-transformer';
 
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
   @ApiProperty({
-    title: 'name',
-    name: 'name',
+    title: 'firstName',
+    name: 'firstName',
     type: String,
-    description: 'User name',
+    description: 'User firstName',
     required: true,
     example: 'David',
   })
   @IsNotEmpty()
   @IsString()
   @Column({ type: 'text', nullable: false })
-  name: string;
+  firstName: string;
 
   @ApiProperty({
     title: 'password',
@@ -37,6 +38,7 @@ export class UserEntity extends BaseEntity {
   @IsNotEmpty()
   @IsString()
   @IsStrongPassword()
+  @Expose()
   @Column({ type: 'varchar', nullable: false })
   password: string;
 

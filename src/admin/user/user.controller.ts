@@ -47,7 +47,7 @@ export class UserController {
     type: ConflictException,
     description: 'User with name  already exists!',
   })
-  // @UseGuards(RootGuard)
+  @UseGuards(RootGuard)
   @Post('/create-user')
   async createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);

@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { TokenService } from '../token/token.service';
 import { TokenDto } from '../token/dto/token.dto';
 import { LoginDto } from './dto/userLogin.dto';
-import { compare } from 'bcrypt';
+import { verifyHash } from 'src/helpers/providers/hashProvider';
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,11 +21,12 @@ export class AuthService {
 
   async loginUser(dto: LoginDto) {
     const user = await this.userRepository.findOne({
-      where: { name: dto.name },
+      where: { firstName: dto.firstName },
     });
-    if (!user) throw new NotFoundException(`User with ${dto.name} not found!`);
+    if (!user)
+      throw new NotFoundException(`User with ${dto.firstName} not found!`);
 
-    const isPasswordValid = await compare(dto.password, user.password);
+    const isPasswordValid = await verifyHash(dto.password, user.password);
     if (!isPasswordValid)
       throw new BadRequestException(`User password incorrect!`);
 
@@ -35,7 +36,7 @@ export class AuthService {
 
     return {
       message: 'User login successful!',
-      user: user,
+      ...user,
       ...tokens,
     };
   }
@@ -60,7 +61,7 @@ export class AuthService {
     await this.tokenService.saveTokens(user.id, tokens.refreshToken);
     return {
       ...tokens,
-      user: new TokenDto(user),
+      ...user,
     };
   }
 }

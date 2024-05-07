@@ -1,4 +1,8 @@
-import { OmitType } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
 import { UserEntity } from '../entities/user.entity';
 
-export class CreateUserDto extends OmitType(UserEntity, ['token'] as const) {}
+export class CreateUserDto extends PickType(UserEntity, [
+  'firstName',
+  'password',
+  'role',
+] as const) {}

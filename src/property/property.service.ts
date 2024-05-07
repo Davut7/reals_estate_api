@@ -27,7 +27,7 @@ export class PropertyService {
   async createProperty(areaId: string, dto: CreatePropertyDto) {
     const area = await this.areaService.getOneArea(areaId);
     if (!area) throw new NotFoundException('Area not found');
-    const property = this.propertyRepository.create({...dto, areaId:areaId});
+    const property = this.propertyRepository.create({ ...dto, areaId: areaId });
 
     await this.propertyRepository.save(property);
 

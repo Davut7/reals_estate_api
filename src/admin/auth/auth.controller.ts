@@ -20,11 +20,9 @@ import {
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
-  getSchemaPath,
 } from '@nestjs/swagger';
 import { RedisService } from 'src/redis/redis.service';
 import { AuthGuard } from 'src/helpers/guards/auth.guard';
-import { UserEntity } from '../user/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('/auth')
@@ -39,7 +37,9 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        user: { $ref: getSchemaPath(UserEntity) },
+        id: { type: 'string' },
+        firstName: { type: 'string' },
+        role: { type: 'string' },
         message: { type: 'string', example: 'System user login successfully!' },
         accessToken: { type: 'string' },
         refreshToken: { type: 'string' },
@@ -63,7 +63,9 @@ export class AuthController {
     });
     res.status(200).json({
       message: 'System user login successfully!',
-      user: user.user,
+      id: user.id,
+      firstName: user.firstName,
+      role: user.role,
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
     });
@@ -74,7 +76,9 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        user: { $ref: getSchemaPath(UserEntity) },
+        id: { type: 'string' },
+        firstName: { type: 'string' },
+        role: { type: 'string' },
         message: {
           type: 'string',
           example: 'System user tokens refreshed successfully!',
@@ -98,7 +102,9 @@ export class AuthController {
     });
     res.status(200).json({
       message: 'System user tokens refreshed successfully!',
-      user: user.user,
+      id: user.id,
+      firstName: user.firstName,
+      role: user.role,
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
     });
