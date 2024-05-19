@@ -92,7 +92,7 @@ export class MinioService implements OnModuleInit {
     }
     return url.replace(
       this.configService.get('MINIO_ENDPOINT'),
-      process.env.MINIO_HOST,
+      process.env.MINIO_ENDPOINT,
     );
   }
 

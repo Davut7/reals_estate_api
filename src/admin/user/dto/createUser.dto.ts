@@ -4,5 +4,4 @@ import { UserEntity } from '../entities/user.entity';
 export class CreateUserDto extends PickType(UserEntity, [
   'firstName',
   'password',
-  'role',
 ] as const) {}

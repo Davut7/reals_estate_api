@@ -11,7 +11,6 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -25,7 +24,6 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { AuthGuard } from 'src/helpers/guards/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomUUID } from 'crypto';
@@ -37,6 +35,7 @@ import { CreatePropertyDto } from './dto/createProperty.dto';
 import { GetPropertiesQuery } from './dto/getPropertiesQuery.query';
 import { UpdatePropertyDto } from './dto/updateProperty.dto';
 import { PropertyEntity } from './entities/property.entity';
+import { Public } from 'src/helpers/common/decorators/isPublic.decorator';
 
 @ApiTags('property')
 @ApiBearerAuth()
@@ -59,7 +58,6 @@ export class PropertyController {
     description: 'Area not found',
   })
   @ApiParam({ type: 'string', name: 'areaId', description: 'Area id' })
-  @UseGuards(AuthGuard)
   @Post(':areaId')
   async createProperty(
     @Body() dto: CreatePropertyDto,
@@ -78,6 +76,7 @@ export class PropertyController {
       },
     },
   })
+  @Public()
   @Get()
   async getProperties(@Query() query?: GetPropertiesQuery) {
     return this.propertyService.getProperties(query);
@@ -89,6 +88,7 @@ export class PropertyController {
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
   @ApiParam({ name: 'id', description: 'Property id' })
+  @Public()
   @Get('/:id')
   async getOneProperty(@Param('id') propertyId: string) {
     return this.propertyService.getOneProperty(propertyId);
@@ -106,7 +106,6 @@ export class PropertyController {
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
   @ApiParam({ name: 'id', description: 'Property id' })
-  @UseGuards(AuthGuard)
   @Patch('/:id')
   async updateProperty(
     @Param('id') propertyId: string,
@@ -126,7 +125,6 @@ export class PropertyController {
   })
   @ApiNotFoundResponse({ description: 'Property not found' })
   @ApiParam({ name: 'id', description: 'Property id' })
-  @UseGuards(AuthGuard)
   @Delete('/:id')
   async deleteProperty(@Param('id') propertyId: string) {
     return this.propertyService.deleteProperty(propertyId);
@@ -138,7 +136,6 @@ export class PropertyController {
     description: 'Error while uploading Property image',
   })
   @ApiConsumes('multipart/form-data')
-  @UseGuards(AuthGuard)
   @Post('/images/:id')
   @UseInterceptors(
     FilesInterceptor('images', 5, {
@@ -166,7 +163,10 @@ export class PropertyController {
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'Property image deleted successfully' },
+        message: {
+          type: 'string',
+          example: 'Property image deleted successfully',
+        },
       },
     },
   })
@@ -175,7 +175,6 @@ export class PropertyController {
     description: 'Error while uploading area image',
     type: InternalServerErrorException,
   })
-  @UseGuards(AuthGuard)
   @Delete('/:propertyId/image/:imageId')
   async deleteAreaImage(
     @Param('propertyId', ParseUUIDPipe) propertyId: string,

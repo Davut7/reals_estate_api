@@ -38,4 +38,3 @@ lerna-debug.log*
 .production.env
 .development.env
 compose.yaml
-Dockerfile

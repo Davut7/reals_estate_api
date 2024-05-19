@@ -8,7 +8,6 @@ import {
   Req,
   Res,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/userLogin.dto';
@@ -22,7 +21,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RedisService } from 'src/redis/redis.service';
-import { AuthGuard } from 'src/helpers/guards/auth.guard';
+import { Public } from 'src/helpers/common/decorators/isPublic.decorator';
 
 @ApiTags('auth')
 @Controller('/auth')
@@ -54,6 +53,7 @@ export class AuthController {
     type: NotFoundException,
     description: 'User with not found!',
   })
+  @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res) {
     const user = await this.authService.loginUser(loginDto);
@@ -65,7 +65,6 @@ export class AuthController {
       message: 'System user login successfully!',
       id: user.id,
       firstName: user.firstName,
-      role: user.role,
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
     });
@@ -92,6 +91,7 @@ export class AuthController {
     type: UnauthorizedException,
     description: 'User unauthorized',
   })
+  @Public()
   @Get('refresh')
   async refresh(@Req() req, @Res() res) {
     const refreshToken = req.cookies['refreshToken'];
@@ -104,7 +104,6 @@ export class AuthController {
       message: 'System user tokens refreshed successfully!',
       id: user.id,
       firstName: user.firstName,
-      role: user.role,
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
     });
@@ -124,12 +123,10 @@ export class AuthController {
     description: 'User unauthorized',
   })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() req, @Res() res) {
     const refreshToken = req.cookies['refreshToken'];
     const accessToken = req.headers.authorization.split(' ')[1];
-    console.log(accessToken);
     await this.redisService.setTokenWithExpiry(accessToken, accessToken);
     await this.authService.logoutUser(refreshToken);
     res.clearCookie('refreshToken');

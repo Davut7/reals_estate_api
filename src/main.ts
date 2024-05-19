@@ -49,7 +49,6 @@ async function bootstrap() {
   app.useGlobalFilters(new SentryFilter(httpAdapter));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.setGlobalPrefix('api');
-
   await app.listen(port, () => {
     console.log(`Your server is listening on port ${port}`);
   });

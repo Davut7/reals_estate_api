@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, OnModuleInit } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AllExceptionsFilter } from './utils/core/allException.filter';
 import { MinioService } from './minio/minio.service';
 import { LogsMiddleware } from './logger/middleware/logs.middleware';
@@ -12,14 +12,13 @@ import { AuthModule } from './admin/auth/auth.module';
 import { TokenModule } from './admin/token/token.module';
 import { UserModule } from './admin/user/user.module';
 import { MailsModule } from './mails/mails.module';
-import { SharedModule } from './shared/shared.module';
 import { MediaModule } from './media/media.module';
 import { RedisModule } from './redis/redis.module';
 import { PropertyModule } from './property/property.module';
 import { AreasModule } from './areas/areas.module';
 import { UserService } from './admin/user/user.service';
 import { CreateUserDto } from './admin/user/dto/createUser.dto';
-import { RoleEnum } from './helpers/constants';
+import { AuthGuard } from './helpers/guards/auth.guard';
 
 @Module({
   imports: [
@@ -65,7 +64,6 @@ import { RoleEnum } from './helpers/constants';
     TokenModule,
     UserModule,
     MailsModule,
-    SharedModule,
     MediaModule,
     RedisModule,
     PropertyModule,
@@ -75,6 +73,10 @@ import { RoleEnum } from './helpers/constants';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
     MinioService,
   ],
@@ -88,11 +90,10 @@ export class AppModule implements OnModuleInit {
     const adminUser: CreateUserDto = {
       firstName: 'admin',
       password: 'Admin123!',
-      role: RoleEnum.admin,
     };
     const user = await this.userService.isAdminUserExists(adminUser.firstName);
     if (!user) {
-      await this.userService.createUser(user);
+      await this.userService.createUser(adminUser);
     } else {
       return console.log('Default admin user already exists');
     }

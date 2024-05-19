@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   PipeTransform,
@@ -13,6 +14,7 @@ export class ImagesTransformer implements PipeTransform<Express.Multer.File[]> {
   constructor(private readonly minioService: MinioService) {}
 
   async transform(files: Express.Multer.File[]): Promise<ITransformedFile[]> {
+    if (files.length <= 0) throw new BadRequestException('Images not provided');
     const transformedFiles: ITransformedFile[] = [];
     for (const file of files) {
       try {

@@ -5,10 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import CustomLogger from './helpers/customLogger';
 import { LogsEntity } from './entity/log.entity';
-import { SharedModule } from 'src/shared/shared.module';
 
 @Module({
-  imports: [ConfigModule, TypeOrmModule.forFeature([LogsEntity]), SharedModule],
+  imports: [ConfigModule, TypeOrmModule.forFeature([LogsEntity])],
   controllers: [LoggerController],
   providers: [LoggerService, CustomLogger],
   exports: [CustomLogger],

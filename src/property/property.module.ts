@@ -4,15 +4,17 @@ import { PropertyController } from './property.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PropertyEntity } from './entities/property.entity';
 import { MediaModule } from '../media/media.module';
-import { SharedModule } from 'src/shared/shared.module';
 import { AreasModule } from 'src/areas/areas.module';
+import { RedisModule } from 'src/redis/redis.module';
+import { MinioModule } from 'src/minio/minio.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PropertyEntity]),
     MediaModule,
-    SharedModule,
     AreasModule,
+    RedisModule,
+    MinioModule,
   ],
   controllers: [PropertyController],
   providers: [PropertyService],

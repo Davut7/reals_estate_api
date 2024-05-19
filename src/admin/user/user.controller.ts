@@ -8,13 +8,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserUpdateDto } from './dto/updateUser.dto';
 import { CurrentUser } from '../../helpers/common/decorators/currentUser.decorator';
 import { TokenDto } from '../token/dto/token.dto';
-import { AuthGuard } from '../../helpers/guards/auth.guard';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
@@ -26,14 +24,12 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/createUser.dto';
-import { RootGuard } from 'src/helpers/guards/rootGuard.guard';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
   @ApiCreatedResponse({
     schema: {
       type: 'object',
@@ -47,7 +43,6 @@ export class UserController {
     type: ConflictException,
     description: 'User with name  already exists!',
   })
-  @UseGuards(RootGuard)
   @Post('/create-user')
   async createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
@@ -68,7 +63,6 @@ export class UserController {
     description: 'Users returned successfully!',
   })
   @Get()
-  @UseGuards(AuthGuard)
   async findUsers() {
     return this.userService.getAllUsers();
   }
@@ -78,7 +72,6 @@ export class UserController {
     description: 'Current user returned successfully!',
   })
   @Get('/get-me')
-  @UseGuards(AuthGuard)
   async getMe(@CurrentUser() currentUser: TokenDto) {
     return this.userService.getMe(currentUser);
   }
@@ -89,7 +82,6 @@ export class UserController {
   })
   @ApiParam({ name: 'id', description: 'User ID' })
   @Get(':id')
-  @UseGuards(AuthGuard)
   async findOneUser(@Param('id', ParseUUIDPipe) userId: string) {
     return this.userService.findUserById(userId);
   }
@@ -100,7 +92,6 @@ export class UserController {
   })
   @ApiParam({ name: 'id', description: 'User ID' })
   @Patch(':id')
-  @UseGuards(AuthGuard)
   async updateUser(
     @Param('id', ParseUUIDPipe) userId: string,
     @Body() userUpdateDto: UserUpdateDto,
@@ -119,7 +110,6 @@ export class UserController {
   })
   @ApiParam({ name: 'id', description: 'User ID' })
   @Delete(':id')
-  @UseGuards(AuthGuard)
   async deleteUser(@Param('id', ParseUUIDPipe) userId: string) {
     return this.userService.deleteUserById(userId);
   }

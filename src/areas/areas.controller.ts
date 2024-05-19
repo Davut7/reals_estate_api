@@ -10,7 +10,6 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -29,7 +28,6 @@ import { AreasService } from './areas.service';
 import { CreateAreaDto } from './dto/createArea.dto';
 import { GetAreasQuery } from './dto/getAreas.query';
 import { UpdateAreaDto } from './dto/updateArea.dto';
-import { AuthGuard } from 'src/helpers/guards/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomUUID } from 'crypto';
@@ -37,6 +35,7 @@ import { imageFilter } from 'src/helpers/filters/imageFilter';
 import { ImagesTransformer } from 'src/helpers/pipes/imagesTransform.pipe';
 import { ITransformedFile } from 'src/helpers/common/interfaces/fileTransform.interface';
 import { AreaEntity } from './entities/area.entity';
+import { Public } from 'src/helpers/common/decorators/isPublic.decorator';
 
 @ApiTags('areas')
 @ApiBearerAuth()
@@ -55,7 +54,6 @@ export class AreasController {
     },
   })
   @ApiConflictResponse({ description: 'Area already exists' })
-  @UseGuards(AuthGuard)
   @Post()
   async createArea(@Body() dto: CreateAreaDto) {
     return this.areasService.createArea(dto);
@@ -71,6 +69,7 @@ export class AreasController {
       },
     },
   })
+  @Public()
   @Get()
   async getAreas(@Query() query?: GetAreasQuery) {
     return this.areasService.getAreas(query);
@@ -82,6 +81,7 @@ export class AreasController {
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiParam({ name: 'id', description: 'Area id' })
+  @Public()
   @Get('/:id')
   async getOneArea(@Param('id') areaId: string) {
     return this.areasService.getOneArea(areaId);
@@ -99,7 +99,6 @@ export class AreasController {
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiParam({ name: 'id', description: 'Area id' })
-  @UseGuards(AuthGuard)
   @Patch('/:id')
   async updateArea(@Param('id') areaId: string, @Body() dto: UpdateAreaDto) {
     return this.areasService.updateArea(areaId, dto);
@@ -116,7 +115,6 @@ export class AreasController {
   })
   @ApiNotFoundResponse({ description: 'Area not found' })
   @ApiParam({ name: 'id', description: 'Area id' })
-  @UseGuards(AuthGuard)
   @Delete('/:id')
   async deleteArea(@Param('id') areaId: string) {
     return this.areasService.deleteArea(areaId);
@@ -139,7 +137,6 @@ export class AreasController {
     description: 'Error while uploading area image',
   })
   @ApiConsumes('multipart/form-data')
-  @UseGuards(AuthGuard)
   @Post('/images/:id')
   @UseInterceptors(
     FilesInterceptor('images', 5, {
@@ -179,7 +176,6 @@ export class AreasController {
     description: 'Error while uploading area image',
     type: InternalServerErrorException,
   })
-  @UseGuards(AuthGuard)
   @Delete('/:areaId/image/:imageId')
   async deleteAreaImage(
     @Param('areaId', ParseUUIDPipe) areaId: string,
