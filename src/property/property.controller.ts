@@ -79,7 +79,7 @@ export class PropertyController {
   @Public()
   @Get()
   async getProperties(@Query() query?: GetPropertiesQuery) {
-    return this.propertyService.getProperties(query);
+    return await this.propertyService.getProperties(query);
   }
 
   @ApiOkResponse({

@@ -81,17 +81,17 @@ export class PropertyService {
         minPrice: minPrice,
         maxPrice: maxPrice,
       });
-
-      const [properties, count] = await propertyQuery
-        .skip((page - 1) * take)
-        .take(10)
-        .getManyAndCount();
-
-      return {
-        properties: properties,
-        propertiesCount: count,
-      };
     }
+
+    const [properties, count] = await propertyQuery
+      .skip((page - 1) * take)
+      .take(take)
+      .getManyAndCount();
+
+    return {
+      properties: properties,
+      propertiesCount: count,
+    };
   }
 
   async getOneProperty(propertyId: string) {
