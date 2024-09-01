@@ -97,6 +97,7 @@ export class PropertyService {
   async getOneProperty(propertyId: string) {
     const property = await this.propertyRepository
       .createQueryBuilder('properties')
+      .leftJoinAndSelect('properties.medias', 'medias')
       .where('properties.id = :propertyId', { propertyId })
       .getOne();
 
